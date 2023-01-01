@@ -18,7 +18,7 @@ jobs:
       - name: Install WASI SDK
         run: |
           wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sdk_17.0_amd64.deb
-          dpkg -i wasi-sdk_17.0_amd64.deb
+          sudo dpkg -i wasi-sdk_17.0_amd64.deb
 
       - name: Install wasm32-wasi target
         run: rustup target add wasm32-wasi
