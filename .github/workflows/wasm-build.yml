@@ -1,0 +1,35 @@
+name: WASM Build
+
+on:
+  push:
+    branches: [wasm]
+  pull_request:
+    branches: [wasm]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install WASI SDK
+        run: |
+          wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-17/wasi-sdk_17.0_amd64.deb
+          sudo dpkg -i wasi-sdk_17.0_amd64.deb
+
+      - name: Install wasm32-wasi target
+        run: rustup target add wasm32-wasi
+
+      - name: Build
+        run: cargo build --target wasm32-wasi --no-default-features --release
+        env:
+          CC_wasm32_wasi: /opt/wasi-sdk/bin/clang
+          CARGO_TARGET_WASM32_WASI_LINKER: /opt/wasi-sdk/bin/clang
+          RUSTFLAGS: "-C target-feature=-crt-static"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: target/wasm32-wasi/release/zola.wasm
