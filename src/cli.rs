@@ -46,6 +46,7 @@ pub enum Command {
     },
 
     /// Serve the site. Rebuild and reload on change automatically
+    #[cfg(feature = "serve")]
     Serve {
         /// Interface to bind on
         #[clap(short = 'i', long, default_value = "127.0.0.1")]

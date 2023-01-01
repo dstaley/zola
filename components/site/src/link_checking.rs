@@ -3,10 +3,14 @@ use std::path::Path;
 use std::{collections::HashMap, path::PathBuf, thread};
 
 use config::LinkCheckerLevel;
+#[cfg(not(target_arch = "wasm32"))]
 use libs::rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use libs::no_rayon::prelude::*;
 
 use crate::Site;
 use errors::{bail, Result};
+#[cfg(not(target_arch = "wasm32"))]
 use libs::rayon;
 use libs::url::Url;
 
@@ -117,6 +121,7 @@ fn get_link_domain(link: &str) -> Result<String> {
 
 /// Checks all external links and returns all the errors that were encountered.
 /// Empty vec == all good
+#[cfg(feature = "serve")]
 pub fn check_external_links(site: &Site) -> Vec<String> {
     let library = site.library.write().expect("Get lock for check_external_links");
 

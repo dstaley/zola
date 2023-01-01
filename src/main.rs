@@ -19,18 +19,29 @@ fn get_config_file_path(dir: &Path, config_path: &Path) -> (PathBuf, PathBuf) {
         .unwrap_or_else(|| panic!("could not find directory containing config file"));
 
     // if we got here we found root_dir so config file should exist so we can unwrap safely
-    let config_file = root_dir
-        .join(&config_path)
-        .canonicalize()
-        .unwrap_or_else(|_| panic!("could not find directory containing config file"));
+    let config_file = if cfg!(target_os = "wasi") {
+        root_dir.join(&config_path)
+    } else {
+        root_dir
+            .join(&config_path)
+            .canonicalize()
+            .unwrap_or_else(|_| panic!("could not find directory containing config file"))
+    };
     (root_dir.to_path_buf(), config_file)
 }
 
 fn main() {
     let cli = Cli::parse();
-    let cli_dir: PathBuf = cli.root.canonicalize().unwrap_or_else(|_| {
-        panic!("Could not find canonical path of root dir: {}", cli.root.display())
-    });
+    let cli_dir: PathBuf = if cfg!(target_os = "wasi") {
+        cli.root
+    } else {
+        cli.root.canonicalize().unwrap_or_else(|_| {
+            panic!(
+                "Could not find canonical path of root dir: {}",
+                cli.root.display()
+            )
+        })
+    };
 
     match cli.command {
         Command::Init { name, force } => {
@@ -57,6 +68,7 @@ fn main() {
                 }
             }
         }
+        #[cfg(feature = "serve")]
         Command::Serve { interface, mut port, output_dir, base_url, drafts, open, fast } => {
             if port != 1111 && !port_is_available(port) {
                 console::error("The requested port is not available");

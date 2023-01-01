@@ -24,13 +24,13 @@ name = "zola"
 [dependencies]
 clap = { version = "3", features = ["derive"] }
 # Below is for the serve cmd
-hyper = { version = "0.14.1", default-features = false, features = ["runtime", "server", "http2", "http1"] }
-tokio = { version = "1.0.1", default-features = false, features = ["rt", "fs", "time"] }
+hyper = { version = "0.14.1", default-features = false, features = ["runtime", "server", "http2", "http1"], optional = true }
+tokio = { version = "1.0.1", default-features = false, features = ["rt", "fs", "time"], optional = true }
 time = { version = "0.3", features = ["formatting", "macros", "local-offset"] }
-notify = "4"
-ws = "0.9"
-ctrlc = "3"
-open = "3"
+notify = { version = "4", optional = true }
+ws = { version = "0.9", optional = true }
+ctrlc = { version = "3", optional = true }
+open = { version = "3", optional = true }
 pathdiff = "0.2"
 # For mimetype detection in serve mode
 mime_guess = "2.0"
@@ -49,11 +49,12 @@ libs = { path = "components/libs" }
 same-file = "1"
 
 [features]
-default = ["rust-tls"]
+default = ["rust-tls", "serve"]
 rust-tls = ["libs/rust-tls"]
 native-tls = ["libs/native-tls"]
 indexing-zh = ["libs/indexing-zh"]
 indexing-ja = ["libs/indexing-ja"]
+serve = ["dep:hyper", "dep:tokio", "dep:notify", "dep:ws", "dep:ctrlc", "dep:open", "site/link_checker"]
 
 [workspace]
 members = ["components/*"]

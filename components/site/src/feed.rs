@@ -1,7 +1,10 @@
 use std::cmp::Ordering;
 use std::path::PathBuf;
 
+#[cfg(not(target_arch = "wasm32"))]
 use libs::rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use libs::no_rayon::prelude::*;
 use libs::tera::Context;
 use serde::Serialize;
 

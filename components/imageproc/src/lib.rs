@@ -11,9 +11,12 @@ use image::io::Reader as ImgReader;
 use image::{imageops::FilterType, EncodableLayout};
 use image::{ImageFormat, ImageOutputFormat};
 use libs::image::DynamicImage;
-use libs::{image, once_cell, rayon, regex, svg_metadata, webp};
+use libs::{image, once_cell, regex, svg_metadata, webp};
 use once_cell::sync::Lazy;
-use rayon::prelude::*;
+#[cfg(not(target_arch = "wasm32"))]
+use libs::rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use libs::no_rayon::prelude::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use svg_metadata::Metadata as SvgMetadata;

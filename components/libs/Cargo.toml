@@ -23,11 +23,11 @@ once_cell = "1"
 percent-encoding = "2"
 pulldown-cmark = { version = "0.9", default-features = false, features = ["simd"]  }
 quickxml_to_serde = "0.5"
-rayon = "1"
+rayon = { version = "1", optional = true }
 regex = "1"
 relative-path = "1"
-reqwest = { version = "0.11", default-features = false, features = ["blocking"] }
-sass-rs = "0.2"
+reqwest = { version = "0.11", default-features = false, features = ["blocking"], optional = true }
+grass = "0.12"
 serde_json = "1"
 serde_yaml = "0.9"
 sha2 = "0.10"
@@ -47,7 +47,7 @@ webp = "0.2"
 
 [features]
 # TODO: fix me, it doesn't pick up the reqwuest feature if not set as default
-default = ["rust-tls"]
+default = ["rust-tls", "reqwest", "rayon"]
 rust-tls = ["reqwest/rustls-tls"]
 native-tls = ["reqwest/default-tls"]
 indexing-zh = ["elasticlunr-rs/zh"]

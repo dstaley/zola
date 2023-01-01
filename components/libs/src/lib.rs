@@ -4,6 +4,9 @@
 //! to define features, it is done in a single place.
 //! It doesn't work for crates exporting macros like `serde` or dev deps but that's ok for most.
 
+#[cfg(target_arch = "wasm32")]
+pub mod no_rayon;
+
 pub use ahash;
 pub use ammonia;
 pub use atty;
@@ -23,11 +26,13 @@ pub use once_cell;
 pub use percent_encoding;
 pub use pulldown_cmark;
 pub use quickxml_to_serde;
+#[cfg(not(target_arch = "wasm32"))]
 pub use rayon;
 pub use regex;
 pub use relative_path;
+#[cfg(feature = "reqwest")]
 pub use reqwest;
-pub use sass_rs;
+pub use grass;
 pub use serde_json;
 pub use serde_yaml;
 pub use sha2;

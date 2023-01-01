@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use libs::csv::Reader;
 use libs::reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
+#[cfg(feature = "serve")]
 use libs::reqwest::{blocking::Client, header};
 use libs::tera::{
     from_value, to_value, Error, Error as TeraError, Function as TeraFn, Map, Result, Value,
@@ -67,6 +68,7 @@ impl FromStr for OutputFormat {
     }
 }
 
+#[cfg(feature = "serve")]
 impl OutputFormat {
     fn as_accept_header(&self) -> header::HeaderValue {
         header::HeaderValue::from_static(match self {
@@ -83,6 +85,7 @@ impl OutputFormat {
 
 #[derive(Debug)]
 enum DataSource {
+    #[cfg(feature = "serve")]
     Url(Url),
     Path(PathBuf),
     Literal(String),
@@ -119,11 +122,14 @@ impl DataSource {
             };
         }
 
-        if let Some(url) = url_arg {
+        #[cfg(feature = "serve")]
+        {
+            if let Some(url) = url_arg {
             return Url::parse(&url)
                 .map(DataSource::Url)
                 .map(Some)
                 .map_err(|e| format!("`load_data`: Failed to parse {} as url: {}", url, e).into());
+            }
         }
 
         if let Some(string_literal) = literal_arg {
@@ -155,6 +161,7 @@ impl DataSource {
 impl Hash for DataSource {
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
+            #[cfg(feature = "serve")]
             DataSource::Url(url) => url.hash(state),
             DataSource::Path(path) => {
                 path.hash(state);
@@ -216,20 +223,27 @@ fn add_headers_from_args(header_args: Option<Vec<String>>) -> Result<HeaderMap> 
 pub struct LoadData {
     base_path: PathBuf,
     theme: Option<String>,
+    #[cfg(feature = "serve")]
     client: Arc<Mutex<Client>>,
     result_cache: Arc<Mutex<HashMap<u64, Value>>>,
     output_path: PathBuf,
 }
 impl LoadData {
     pub fn new(base_path: PathBuf, theme: Option<String>, output_path: PathBuf) -> Self {
-        let client = Arc::new(Mutex::new(
-            Client::builder()
-                .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
-                .build()
-                .expect("reqwest client build"),
-        ));
         let result_cache = Arc::new(Mutex::new(HashMap::new()));
-        Self { base_path, client, result_cache, theme, output_path }
+        let s = Self { base_path, result_cache, theme, output_path };
+        #[cfg(feature = "serve")]
+        {
+            let client = Arc::new(Mutex::new(
+                Client::builder()
+                    .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+                    .build()
+                    .expect("reqwest client build"),
+            ));
+            s.client = client;
+        }
+
+        return s
     }
 }
 
@@ -327,6 +341,8 @@ impl TeraFn for LoadData {
         let data = match data_source {
             DataSource::Path(path) => read_file(&path)
                 .map_err(|e| format!("`load_data`: error reading file {:?}: {}", path, e)),
+            
+            #[cfg(feature = "serve")]
             DataSource::Url(url) => {
                 let response_client = self.client.lock().expect("response client lock");
                 let req = match method {

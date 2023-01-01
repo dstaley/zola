@@ -8,12 +8,18 @@ use std::time::SystemTime;
 use errors::{Context, Result};
 
 pub fn is_path_in_directory(parent: &Path, path: &Path) -> Result<bool> {
-    let canonical_path = path
-        .canonicalize()
-        .with_context(|| format!("Failed to canonicalize {}", path.display()))?;
-    let canonical_parent = parent
-        .canonicalize()
-        .with_context(|| format!("Failed to canonicalize {}", parent.display()))?;
+    let canonical_path = if cfg!(target_os = "wasi") {
+        path.to_path_buf()
+    } else {
+        path.canonicalize().with_context(|| format!("Failed to canonicalize {}", path.display()))?
+    };
+    let canonical_parent = if cfg!(target_os = "wasi") {
+        parent.to_path_buf()
+    } else {
+        parent
+            .canonicalize()
+            .with_context(|| format!("Failed to canonicalize {}", parent.display()))?
+    };
 
     Ok(canonical_path.starts_with(canonical_parent))
 }
@@ -90,21 +96,38 @@ pub fn copy_file_if_needed(src: &Path, dest: &Path, hard_link: bool) -> Result<(
     } else {
         let src_metadata = metadata(src)
             .with_context(|| format!("Failed to get metadata of {}", src.display()))?;
-        let src_mtime = FileTime::from_last_modification_time(&src_metadata);
+        let src_mtime =
+            if cfg!(target_os = "wasi") {
+                FileTime::from_system_time(src_metadata.modified().with_context(|| {
+                    format!("Failed to access mtime for file: {}", src.display())
+                })?)
+            } else {
+                FileTime::from_last_modification_time(&src_metadata)
+            };
         if Path::new(&dest).is_file() {
             let target_metadata = metadata(&dest)?;
-            let target_mtime = FileTime::from_last_modification_time(&target_metadata);
+            let target_mtime = if cfg!(target_os = "wasi") {
+                FileTime::from_system_time(target_metadata.modified().with_context(|| {
+                    format!("Failed to access mtime for file: {}", dest.display())
+                })?)
+            } else {
+                FileTime::from_last_modification_time(&target_metadata)
+            };
             if !(src_mtime == target_mtime && src_metadata.len() == target_metadata.len()) {
                 copy(src, &dest).with_context(|| {
                     format!("Was not able to copy file {} to {}", src.display(), dest.display())
                 })?;
-                set_file_mtime(&dest, src_mtime)?;
+                if cfg!(not(target_os = "wasi")) {
+                    set_file_mtime(&dest, src_mtime)?;
+                }
             }
         } else {
             copy(src, &dest).with_context(|| {
                 format!("Was not able to copy directory {} to {}", src.display(), dest.display())
             })?;
-            set_file_mtime(&dest, src_mtime)?;
+            if cfg!(not(target_os = "wasi")) {
+                set_file_mtime(&dest, src_mtime)?;
+            }
         }
     }
     Ok(())

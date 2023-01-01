@@ -11,7 +11,10 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, RwLock};
 
 use libs::once_cell::sync::Lazy;
+#[cfg(not(target_arch = "wasm32"))]
 use libs::rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use libs::no_rayon::prelude::*;
 use libs::tera::{Context, Tera};
 use libs::walkdir::{DirEntry, WalkDir};
 
@@ -312,23 +315,26 @@ impl Site {
             }
         }
 
-        // check external links, log the results, and error out if needed
-        if self.config.is_in_check_mode() {
-            let external_link_messages = link_checking::check_external_links(self);
-            if !external_link_messages.is_empty() {
-                let messages: Vec<String> = external_link_messages
-                    .iter()
-                    .enumerate()
-                    .map(|(i, msg)| format!("  {}. {}", i + 1, msg))
-                    .collect();
-                let msg = format!(
-                    "Found {} broken external link(s)\n{}",
-                    messages.len(),
-                    messages.join("\n")
-                );
-                match self.config.link_checker.external_level {
-                    config::LinkCheckerLevel::Warn => console::warn(&msg),
-                    config::LinkCheckerLevel::Error => return Err(anyhow!(msg)),
+        #[cfg(feature = "serve")]
+        {
+            // check external links, log the results, and error out if needed
+            if self.config.is_in_check_mode() {
+                let external_link_messages = link_checking::check_external_links(self);
+                if !external_link_messages.is_empty() {
+                    let messages: Vec<String> = external_link_messages
+                        .iter()
+                        .enumerate()
+                        .map(|(i, msg)| format!("  {}. {}", i + 1, msg))
+                        .collect();
+                    let msg = format!(
+                        "Found {} broken external link(s)\n{}",
+                        messages.len(),
+                        messages.join("\n")
+                    );
+                    match self.config.link_checker.external_level {
+                        config::LinkCheckerLevel::Warn => console::warn(&msg),
+                        config::LinkCheckerLevel::Error => return Err(anyhow!(msg)),
+                    }
                 }
             }
         }

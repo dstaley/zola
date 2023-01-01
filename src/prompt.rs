@@ -34,6 +34,7 @@ pub fn ask_bool(question: &str, default: bool) -> Result<bool> {
 }
 
 /// Ask a yes/no question to the user with a timeout
+#[cfg(feature = "serve")]
 pub async fn ask_bool_timeout(question: &str, default: bool, timeout: Duration) -> Result<bool> {
     let (tx, rx) = tokio::sync::oneshot::channel();
 

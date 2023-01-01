@@ -3,7 +3,10 @@ use std::path::PathBuf;
 
 use crate::{Page, SortBy};
 use libs::lexical_sort::natural_lexical_cmp;
+#[cfg(not(target_arch = "wasm32"))]
 use libs::rayon::prelude::*;
+#[cfg(target_arch = "wasm32")]
+use libs::no_rayon::prelude::*;
 
 /// Sort by the field picked by the function.
 /// The pages permalinks are used to break the ties
