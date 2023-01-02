@@ -4,8 +4,13 @@ const { WASI } = require("wasi");
 const { env } = require("node:process");
 const { join } = require("node:path");
 
-module.exports = async function build(baseUrl) {
-  let args = ["zola", "--root", "/site", "build"];
+/**
+ * 
+ * @param {string} siteDir Path to Zola site, relative to the current working directory
+ * @param {string} [baseUrl]
+ */
+module.exports = async function build(siteDir = '.', baseUrl) {
+  let args = ["zola", "build"];
   if (baseUrl) {
     args = [...args, "--base-url", baseUrl];
   }
@@ -13,7 +18,7 @@ module.exports = async function build(baseUrl) {
     args,
     env,
     preopens: {
-      "/": join(process.cwd(), "site"),
+      "/": join(process.cwd(), siteDir),
     },
   });
   const importObject = { wasi_snapshot_preview1: wasi.wasiImport };

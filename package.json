@@ -6,6 +6,9 @@
   "files": [
     "/js"
   ],
+  "engines": {
+    "node": ">=16"
+  },
   "keywords": [],
   "author": "",
   "license": "MIT",
