@@ -5,6 +5,7 @@ on:
     branches: [wasm]
   pull_request:
     branches: [wasm]
+  workflow_call:
 
 jobs:
   build:
