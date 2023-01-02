@@ -5,12 +5,12 @@ const { env } = require("node:process");
 const { join } = require("node:path");
 
 /**
- * 
+ *
  * @param {string} siteDir Path to Zola site, relative to the current working directory
  * @param {string} [baseUrl]
  */
-module.exports = async function build(siteDir = '.', baseUrl) {
-  let args = ["zola", "build"];
+module.exports = async function build(siteDir = ".", baseUrl) {
+  let args = ["zola", "--root", "/", "build"];
   if (baseUrl) {
     args = [...args, "--base-url", baseUrl];
   }
