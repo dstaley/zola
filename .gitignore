@@ -29,3 +29,6 @@ shell.nix
 # vim temporary files
 **/.*.sw*
 .swp
+
+# npm package
+node_modules/
