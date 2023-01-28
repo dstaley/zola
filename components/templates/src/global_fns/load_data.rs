@@ -6,6 +6,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use libs::csv::Reader;
+#[cfg(feature = "serve")]
 use libs::reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
 #[cfg(feature = "serve")]
 use libs::reqwest::{blocking::Client, header};
@@ -192,6 +193,7 @@ fn get_output_format_from_args(
     }
 }
 
+#[cfg(feature = "serve")]
 fn add_headers_from_args(header_args: Option<Vec<String>>) -> Result<HeaderMap> {
     let mut headers = HeaderMap::new();
     if let Some(header_args) = header_args {
